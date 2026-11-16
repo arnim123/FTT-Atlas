@@ -1,0 +1,13 @@
+#!/bin/sh
+# Reject staged secrets. Enable with: git config core.hooksPath .githooks
+set -eu
+files=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -z "$files" ]; then
+  exit 0
+fi
+pattern='BEGIN [A-Z ]*PRIVATE KEY|AKIA[0-9A-Z]{16}|dms_pat_[A-Za-z0-9]{8}_[A-Za-z0-9]{16,}|xox[baprs]-[A-Za-z0-9-]{10,}'
+if printf '%s\n' "$files" | grep -E -v '(^|/)(\.env\.example|pre-commit)$' | xargs grep -nE "$pattern" -- 2>/dev/null; then
+  echo "pre-commit: staged files look like they contain a secret. Remove it before committing." >&2
+  exit 1
+fi
+exit 0

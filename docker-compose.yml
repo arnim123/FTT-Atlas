@@ -1,0 +1,52 @@
+# Local Atlas stack. Postgres is published on 5432 so Alembic, the seed, and pytest can run on the host.
+name: atlas
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: atlas
+      POSTGRES_DB: atlas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    restart: unless-stopped
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    environment:
+      # The file uses localhost for host-side tools. Inside Compose the database is the postgres service.
+      DATABASE_URL: postgresql+psycopg://atlas:atlas@postgres:5432/atlas
+      ALLOW_TEST_LOGIN: "false"
+    volumes:
+      - ./backend/credentials:/app/credentials:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health')",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+volumes:
+  postgres_data:

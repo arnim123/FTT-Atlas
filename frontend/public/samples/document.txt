@@ -1,0 +1,10 @@
+Atlas | Company Knowledge
+
+A shared resource for the Acme team.
+
+Getting started
+1. Review the latest guidelines with your team.
+2. Share context, document decisions, and keep resources current.
+3. Contact the document owner for questions.
+
+This is a representative sample file. Upload your own documents to preview the original content.

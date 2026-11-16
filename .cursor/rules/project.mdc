@@ -1,0 +1,49 @@
+PROJECT: Company Knowledge & Document Management System (DMS).
+Phase 1 has NO built-in AI features. Two hard requirements:
+(a) AI-READY foundation for Phase 2 (own RAG chatbot later).
+(b) EVERYTHING is reachable by external AI agents (ChatGPT, Grok, Claude, Cursor, custom bots)
+    through a REST API and an MCP server. In Phase 1 the external AI is the "brain"; this system
+    provides permission-safe search, document content and (opt-in) write tools.
+
+STACK
+- Frontend: React 18 + TypeScript + Vite, Tailwind, shadcn/ui, TanStack Query, React Router.
+- Backend: FastAPI, sync SQLAlchemy 2.0 + psycopg 3, Alembic, Pydantic v2, pytest.
+- MCP: official `mcp` Python SDK, current major version, stateless Streamable HTTP.
+  ALWAYS read the current official SDK + spec docs before writing MCP code (APIs changed between v1 and v2).
+- DB: PostgreSQL (pgvector/pgvector Docker image). Local dev via Docker Compose.
+- Monorepo: /frontend, /backend, /docs.
+
+PRINCIPLES
+- Lightweight. No Redis, Celery or Elasticsearch. Postgres does search + job queue.
+- Every request resolves to a Principal {user, auth_method: session|api_token|oauth, scopes,
+  token_id, client_name}. Permission checks ALWAYS evaluate principal.user. Scopes can only
+  NARROW access, never widen it.
+- ONE service layer. Web routers, agent REST routes and MCP tools all call the same services.
+  No duplicated business logic.
+- The backend is the ONLY permission enforcer. UI hiding is cosmetic.
+- Layers: routers -> services -> models.
+- Every document/folder list, search, stat, MCP tool and (later) AI retrieval MUST go through ONE
+  function: accessible_documents_query(user). Never fetch first and filter afterwards.
+- Return 404 (not 403) when a user cannot view a resource, so existence never leaks.
+- EXTERNAL-AI SAFETY: (1) read-only by default, write scopes opt-in; (2) never expose permanent
+  delete, permission management, user admin, settings or token management through tokens/OAuth/MCP;
+  (3) document text is UNTRUSTED data (prompt-injection risk): always return it labeled as content,
+  never as instructions; (4) cap and paginate output sizes; (5) audit every non-session call;
+  (6) global kill switch org_settings.external_ai_enabled.
+- Never log secrets or document content. API tokens are stored only as SHA-256 hashes.
+- External systems sit behind interfaces: StorageBackend, GoogleDriveClient, TextExtractor,
+  EmbeddingProvider, LLMProvider. Provide fakes for tests.
+- Config via env (pydantic-settings). Feature flag AI_ENABLED=false.
+- API under /api/v1, typed schemas, error format {code, message, details}.
+- UUID PKs, created_at/updated_at everywhere, soft delete (deleted_at).
+- Write pytest tests for all permission and scope logic. No secrets in the repo.
+
+DOMAIN
+- Roles: super_admin, admin, department_manager, employee, guest.
+- Sources: google_doc, google_sheet, google_slide, uploaded_file.
+- Access = visibility (private | department | organization | custom) + default_access (view | edit)
+  + explicit grants (user or department -> view | edit).
+- Owner and admins always have full access. Department managers manage their department.
+- Guests only see explicitly granted documents. Bots are users with is_bot=true (no Google login).
+- Folders nest without limit (parent_id) and use the same visibility model.
+- Token/OAuth scopes: docs:read, docs:write only.

@@ -1,0 +1,63 @@
+@import '@fontsource/inter/latin-400.css';
+@import '@fontsource/inter/latin-500.css';
+@import '@fontsource/inter/latin-600.css';
+@import '@fontsource/inter/latin-700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 160 14% 97.5%; --foreground: 165 15% 14%;
+    --card: 0 0% 100%; --primary: 167 62% 23%; --primary-foreground: 0 0% 100%;
+    --secondary: 160 17% 95%; --secondary-foreground: 165 17% 24%;
+    --muted: 160 14% 95%; --muted-foreground: 162 6% 47%;
+    --accent: 158 34% 93%; --accent-foreground: 167 62% 23%;
+    --border: 160 12% 89%; --input: 160 12% 86%; --ring: 166 43% 39%;
+    --destructive: 0 68% 48%; --destructive-foreground: 0 0% 100%;
+    color-scheme: light;
+  }
+  .dark {
+    --background: 170 13% 8%; --foreground: 150 12% 91%;
+    --card: 170 11% 11%; --primary: 162 43% 58%; --primary-foreground: 170 35% 9%;
+    --secondary: 168 10% 17%; --secondary-foreground: 150 12% 91%;
+    --muted: 170 10% 16%; --muted-foreground: 160 7% 61%;
+    --accent: 166 23% 18%; --accent-foreground: 160 40% 71%;
+    --border: 168 9% 22%; --input: 168 9% 26%; --ring: 160 40% 60%;
+    --destructive: 0 66% 62%; --destructive-foreground: 0 0% 100%;
+    color-scheme: dark;
+  }
+  * { @apply border-border; }
+  body { @apply bg-background font-sans text-[13px] text-foreground antialiased; margin: 0; }
+  button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled), [role='button']:not([aria-disabled='true']) { cursor: pointer; }
+  :focus-visible { @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background; }
+  input:focus-visible, textarea:focus-visible, select:focus-visible { @apply ring-1 ring-ring ring-offset-0; }
+  ::selection { @apply bg-primary/15; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-thumb { @apply rounded-full bg-foreground/15; }
+  input[type='search']::-webkit-search-cancel-button { -webkit-appearance: none; }
+}
+
+@layer components {
+  .page-container { @apply mx-auto w-full max-w-[1560px] animate-fade-up px-5 py-7 md:px-8 xl:px-10; }
+  .page-title { @apply text-[28px] font-semibold leading-tight tracking-[-0.8px] md:text-[30px]; }
+  .eyebrow { @apply text-[10px] font-semibold uppercase tracking-[1.7px] text-muted-foreground; }
+  .panel { @apply rounded-lg border bg-card shadow-soft; }
+  .field-label { @apply mb-2 block text-xs font-medium; }
+  .select-input { @apply h-9 w-full rounded-md border border-input bg-card px-3 text-xs outline-none disabled:opacity-50; }
+  .table-head { @apply bg-muted/50 text-[10px] font-medium uppercase tracking-[0.6px] text-muted-foreground; }
+  .table-cell { @apply border-t px-4 py-3.5 text-xs; }
+  .tag { @apply inline-flex items-center rounded border border-border/70 bg-muted/60 px-1.5 py-0.5 text-[10px] leading-4 text-muted-foreground; }
+  .icon-button { @apply inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground; }
+}
+
+.knowledge-pattern { background-image: radial-gradient(hsl(var(--primary) / .14) .8px, transparent .8px); background-size: 14px 14px; }
+.locked-pattern { background-image: repeating-linear-gradient(-45deg, transparent, transparent 5px, hsl(var(--border) / .14) 5px, hsl(var(--border) / .14) 6px); }
+.paper { background: #fff; color: #293b36; box-shadow: 0 3px 24px #102f2610; }
+.dark .paper { background: #eeeee8; }
+.recharts-wrapper:focus-visible, .recharts-surface:focus-visible { outline: none; }
+.drop-active { @apply bg-accent ring-2 ring-inset ring-primary; }
+mark { @apply rounded-sm bg-amber-100 px-0.5 text-amber-950 dark:bg-amber-900/50 dark:text-amber-100; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
