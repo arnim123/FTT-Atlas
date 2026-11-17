@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app import __version__
-from app.api.middleware import AuditMiddleware, ExternalGateMiddleware, OAuthCorsMiddleware
+from app.api.middleware import AuditMiddleware, ExternalGateMiddleware, FrontendMiddleware, OAuthCorsMiddleware
 from app.api.oauth import public_router as oauth_public_router
 from app.api.router import api_router
 from app.core.config import get_settings
@@ -76,6 +76,7 @@ def create_app() -> FastAPI:
     application.add_middleware(ExternalGateMiddleware)
     application.add_middleware(AuditMiddleware)
     application.add_middleware(OAuthCorsMiddleware)
+    application.add_middleware(FrontendMiddleware)
     application.include_router(oauth_public_router)
     application.include_router(api_router, prefix="/api/v1")
     # Mounted at / so the Streamable HTTP route stays /mcp and the OAuth metadata

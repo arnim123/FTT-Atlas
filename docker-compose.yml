@@ -28,8 +28,10 @@ services:
       # The file uses localhost for host-side tools. Inside Compose the database is the postgres service.
       DATABASE_URL: postgresql+psycopg://atlas:atlas@postgres:5432/atlas
       ALLOW_TEST_LOGIN: "false"
+      FRONTEND_DIST: /app/frontend-dist
     volumes:
       - ./backend/credentials:/app/credentials:ro
+      - ./frontend/dist:/app/frontend-dist:ro
     ports:
       - "8000:8000"
     depends_on:

@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     storage_root: str = "storage"
     max_upload_mb: int = Field(default=50, ge=1, le=1024)
     public_app_url: str = "http://localhost:5173"
+    frontend_dist: str = ""
     google_mode: str = "fake"
     google_service_account_file: str = ""
     google_service_account_b64: str = ""

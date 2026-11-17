@@ -4,10 +4,12 @@ The audit row is written for every bearer call. It records the route or MCP tool
 name and never the document text.
 """
 
+import mimetypes
 import time
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from starlette.responses import JSONResponse
+from starlette.responses import FileResponse, JSONResponse, Response
 
 from app.core.config import get_settings
 from app.core.enums import AuditChannel
@@ -225,7 +227,7 @@ def _cors_policy(scope, path: str) -> dict[str, str] | None:
 def _frontend_origins() -> set[str]:
     settings = get_settings()
     configured = settings.public_app_url.rstrip("/")
-    allowed = {configured}
+    allowed = {configured, settings.public_base_url.rstrip("/")}
     if settings.app_env == "production":
         return allowed
     parsed = urlparse(configured)
@@ -279,6 +281,45 @@ def _ip(scope) -> str | None:
 def _error_parts(exc: ApiError) -> tuple[str, str]:
     detail = exc.detail if isinstance(exc.detail, dict) else {}
     return str(detail.get("code") or "ERROR"), str(detail.get("message") or "Request failed.")
+
+
+_APP_PREFIXES = ("/api", "/mcp", "/oauth", "/.well-known", "/docs", "/redoc", "/openapi.json")
+
+
+class FrontendMiddleware:
+    """Serve the built web app on the public address. API and MCP paths stay on the backend."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or not _serve_frontend(scope.get("path") or ""):
+            await self.app(scope, receive, send)
+            return
+        await _frontend_file(scope, receive, send)
+
+
+def _serve_frontend(path: str) -> bool:
+    if not get_settings().frontend_dist.strip():
+        return False
+    return not path.startswith(_APP_PREFIXES)
+
+
+def _frontend_file(scope, receive, send):
+    root = Path(get_settings().frontend_dist).resolve()
+    relative = (scope.get("path") or "/").lstrip("/")
+    target = (root / relative).resolve() if relative else root / "index.html"
+    if root not in target.parents and target != root:
+        return Response(status_code=404)(scope, receive, send)
+    if target.is_file():
+        media = mimetypes.guess_type(target.name)[0] or "application/octet-stream"
+        return FileResponse(target, media_type=media)(scope, receive, send)
+    if "." in Path(relative).name:
+        return Response(status_code=404)(scope, receive, send)
+    index = root / "index.html"
+    if not index.is_file():
+        return Response(status_code=404)(scope, receive, send)
+    return FileResponse(index, media_type="text/html", headers={"Cache-Control": "no-cache"})(scope, receive, send)
 
 
 async def _send_error(scope, receive, send, status: int, code: str, message: str, headers: dict[str, str] | None = None) -> None:
